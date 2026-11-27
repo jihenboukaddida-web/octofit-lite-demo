@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm';
 
 test('the page loads the leaderboard and refreshes it after an activity', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(html, /<th>Activités<\/th>/);
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const elements = {
     '#activity-form': {
@@ -21,6 +22,13 @@ test('the page loads the leaderboard and refreshes it after an activity', async 
       replaceChildren() {},
     },
   };
+  const createElement = (tagName) => ({
+    tagName,
+    textContent: '',
+    append(...children) {
+      this.children = children;
+    },
+  });
   const requests = [];
   let submitted = false;
   const fetch = async (url, options) => {
@@ -37,8 +45,8 @@ test('the page loads the leaderboard and refreshes it after an activity', async 
       ok: true,
       json: async () => ({
         leaderboard: submitted
-          ? [{ team: 'Robocats', totalPoints: 55, rank: 1 }, { team: 'Octocats', totalPoints: 50, rank: 2 }]
-          : [{ team: 'Octocats', totalPoints: 50, rank: 1 }, { team: 'Robocats', totalPoints: 45, rank: 2 }],
+          ? [{ team: 'Robocats', totalPoints: 55, activityCount: 2, rank: 1 }, { team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 2 }]
+          : [{ team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 1 }, { team: 'Robocats', totalPoints: 45, activityCount: 1, rank: 2 }],
       }),
     };
   };
@@ -50,21 +58,21 @@ test('the page loads the leaderboard and refreshes it after an activity', async 
   runInNewContext(script, {
     document: {
       querySelector: (selector) => elements[selector],
-      createElement: () => ({ textContent: '' }),
+      createElement,
     },
     fetch,
     FormData,
   });
   await setImmediate();
-  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.textContent), [
-    'Octocats: 50 points',
-    'Robocats: 45 points',
+  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.children.map((cell) => cell.textContent)), [
+    [1, 'Octocats', 50, 2],
+    [2, 'Robocats', 45, 1],
   ]);
 
   await elements['#activity-form'].handler({ preventDefault() {} });
-  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.textContent), [
-    'Robocats: 55 points',
-    'Octocats: 50 points',
+  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.children.map((cell) => cell.textContent)), [
+    [1, 'Robocats', 55, 2],
+    [2, 'Octocats', 50, 2],
   ]);
   assert.equal(requests.filter(({ url }) => url === '/api/leaderboard').length, 2);
   assert.equal(elements['#activity-form'].resetCalled, true);
@@ -89,6 +97,13 @@ test('the page filters activities by team and retains the filter after adding an
     '#leaderboard': { replaceChildren(...items) { this.items = items; } },
     '#team-filter': teamFilter,
   };
+  const createElement = (tagName) => ({
+    tagName,
+    textContent: '',
+    append(...children) {
+      this.children = children;
+    },
+  });
   const activities = [
     { student: 'Alex', team: 'Octocats', type: 'Running', minutes: 30, points: 30 },
     { student: 'Sam', team: 'Robocats', type: 'Cycling', minutes: 45, points: 45 },
@@ -108,7 +123,7 @@ test('the page filters activities by team and retains the filter after adding an
   runInNewContext(script, {
     document: {
       querySelector: (selector) => elements[selector],
-      createElement: () => ({ textContent: '', value: '' }),
+      createElement,
     },
     fetch,
     FormData,
