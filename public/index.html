@@ -8,7 +8,7 @@
     body { font-family: sans-serif; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
     form { display: grid; gap: 0.75rem; }
     label { display: grid; gap: 0.25rem; }
-    input, button { font: inherit; padding: 0.5rem; }
+    input, select, button { font: inherit; padding: 0.5rem; }
     button { cursor: pointer; }
     #error { color: #a00000; }
   </style>
@@ -28,6 +28,11 @@
     <h2>Leaderboard</h2>
     <ol id="leaderboard"></ol>
     <h2>Activities</h2>
+    <label>Filter by team
+      <select id="team-filter">
+        <option value="">All teams</option>
+      </select>
+    </label>
     <ul id="activities"></ul>
   </main>
   <script>
@@ -35,17 +40,39 @@
     const error = document.querySelector('#error');
     const list = document.querySelector('#activities');
     const leaderboardList = document.querySelector('#leaderboard');
+    const teamFilter = document.querySelector('#team-filter');
+    let activities = [];
 
     async function loadActivities() {
       const response = await fetch('/api/activities');
       if (!response.ok) throw new Error('Unable to load activities.');
-      const { activities } = await response.json();
-      list.replaceChildren(...activities.map((activity) => {
+      ({ activities } = await response.json());
+
+      const selectedTeam = teamFilter.value;
+      const teams = [...new Set(activities.map((activity) => activity.team))];
+      const allTeams = document.createElement('option');
+      allTeams.value = '';
+      allTeams.textContent = 'All teams';
+      teamFilter.replaceChildren(allTeams, ...teams.map((team) => {
+        const option = document.createElement('option');
+        option.value = team;
+        option.textContent = team;
+        return option;
+      }));
+      teamFilter.value = teams.includes(selectedTeam) ? selectedTeam : '';
+      renderActivities();
+    }
+
+    function renderActivities() {
+      const selectedTeam = teamFilter.value;
+      list.replaceChildren(...activities.filter((activity) => !selectedTeam || activity.team === selectedTeam).map((activity) => {
         const item = document.createElement('li');
         item.textContent = `${activity.student} - ${activity.team} - ${activity.type}: ${activity.minutes} minutes (${activity.points} points)`;
         return item;
       }));
     }
+
+    teamFilter.addEventListener('change', renderActivities);
 
     async function loadLeaderboard() {
       const response = await fetch('/api/leaderboard');

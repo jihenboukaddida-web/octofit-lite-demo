@@ -35,7 +35,7 @@ Seed data at startup: 3 activities across 2 teams, **Octocats** and **Robocats**
 `public/index.html` (plain HTML, CSS and JavaScript, no framework):
 
 - a form to log an activity (student, team, type, minutes), showing the API error message when the input is invalid;
-- the list of activities;
+- the list of activities, filterable by team or showing all teams; available teams update after an activity is added;
 - (version 2) the team leaderboard, refreshed after each new activity.
 
 ## 5. Tests
