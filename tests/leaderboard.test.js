@@ -7,8 +7,8 @@ test('GET /api/leaderboard sums points by team and updates ranks after activitie
   const initial = await request(app).get('/api/leaderboard').expect(200);
   assert.deepEqual(initial.body, {
     leaderboard: [
-      { team: 'Octocats', totalPoints: 50, rank: 1 },
-      { team: 'Robocats', totalPoints: 45, rank: 2 },
+      { team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 1 },
+      { team: 'Robocats', totalPoints: 45, activityCount: 1, rank: 2 },
     ],
   });
 
@@ -28,9 +28,9 @@ test('GET /api/leaderboard sums points by team and updates ranks after activitie
   const updated = await request(app).get('/api/leaderboard').expect(200);
   assert.deepEqual(updated.body, {
     leaderboard: [
-      { team: '__proto__', totalPoints: 60, rank: 1 },
-      { team: 'Robocats', totalPoints: 57.5, rank: 2 },
-      { team: 'Octocats', totalPoints: 50, rank: 3 },
+      { team: '__proto__', totalPoints: 60, activityCount: 1, rank: 1 },
+      { team: 'Robocats', totalPoints: 57.5, activityCount: 2, rank: 2 },
+      { team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 3 },
     ],
   });
 });

@@ -37,8 +37,8 @@ test('the page loads the leaderboard and refreshes it after an activity', async 
       ok: true,
       json: async () => ({
         leaderboard: submitted
-          ? [{ team: 'Robocats', totalPoints: 55, rank: 1 }, { team: 'Octocats', totalPoints: 50, rank: 2 }]
-          : [{ team: 'Octocats', totalPoints: 50, rank: 1 }, { team: 'Robocats', totalPoints: 45, rank: 2 }],
+          ? [{ team: 'Robocats', totalPoints: 55, activityCount: 2, rank: 1 }, { team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 2 }]
+          : [{ team: 'Octocats', totalPoints: 50, activityCount: 2, rank: 1 }, { team: 'Robocats', totalPoints: 45, activityCount: 1, rank: 2 }],
       }),
     };
   };
@@ -50,21 +50,25 @@ test('the page loads the leaderboard and refreshes it after an activity', async 
   runInNewContext(script, {
     document: {
       querySelector: (selector) => elements[selector],
-      createElement: () => ({ textContent: '' }),
+      createElement: () => ({
+        textContent: '',
+        cells: [],
+        append(cell) { this.cells.push(cell); },
+      }),
     },
     fetch,
     FormData,
   });
   await setImmediate();
-  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.textContent), [
-    'Octocats: 50 points',
-    'Robocats: 45 points',
+  assert.deepEqual(elements['#leaderboard'].items.map((row) => row.cells.map((cell) => cell.textContent)), [
+    ['Octocats', 50, 2],
+    ['Robocats', 45, 1],
   ]);
 
   await elements['#activity-form'].handler({ preventDefault() {} });
-  assert.deepEqual(elements['#leaderboard'].items.map((item) => item.textContent), [
-    'Robocats: 55 points',
-    'Octocats: 50 points',
+  assert.deepEqual(elements['#leaderboard'].items.map((row) => row.cells.map((cell) => cell.textContent)), [
+    ['Robocats', 55, 2],
+    ['Octocats', 50, 2],
   ]);
   assert.equal(requests.filter(({ url }) => url === '/api/leaderboard').length, 2);
   assert.equal(elements['#activity-form'].resetCalled, true);
