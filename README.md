@@ -6,3 +6,16 @@ The repository starts almost empty on purpose: GitHub Copilot agent mode builds 
 `docs/spec.md`, guided by `.github/copilot-instructions.md`.
 
 Open it in a GitHub Codespace, then follow the demo guide.
+
+## Run locally
+
+Use Node.js 22, then install dependencies and start the server:
+
+```sh
+npm install
+npm start
+```
+
+Open http://localhost:3000 to log activities and see the team leaderboard,
+which refreshes after each new activity. Activities are stored in memory and
+reset when the server restarts. Run the tests with `npm test`.

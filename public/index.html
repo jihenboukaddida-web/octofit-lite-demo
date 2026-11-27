@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OctoFit Lite</title>
+  <style>
+    body { font-family: sans-serif; max-width: 48rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    form { display: grid; gap: 0.75rem; }
+    label { display: grid; gap: 0.25rem; }
+    input, button { font: inherit; padding: 0.5rem; }
+    button { cursor: pointer; }
+    #error { color: #a00000; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>OctoFit Lite</h1>
+    <h2>Log an activity</h2>
+    <form id="activity-form" novalidate>
+      <label>Student <input name="student" type="text"></label>
+      <label>Team <input name="team" type="text"></label>
+      <label>Type <input name="type" type="text"></label>
+      <label>Minutes <input name="minutes" type="number" step="any"></label>
+      <button type="submit">Add activity</button>
+    </form>
+    <p id="error" role="alert"></p>
+    <h2>Leaderboard</h2>
+    <ol id="leaderboard"></ol>
+    <h2>Activities</h2>
+    <ul id="activities"></ul>
+  </main>
+  <script>
+    const form = document.querySelector('#activity-form');
+    const error = document.querySelector('#error');
+    const list = document.querySelector('#activities');
+    const leaderboardList = document.querySelector('#leaderboard');
+
+    async function loadActivities() {
+      const response = await fetch('/api/activities');
+      if (!response.ok) throw new Error('Unable to load activities.');
+      const { activities } = await response.json();
+      list.replaceChildren(...activities.map((activity) => {
+        const item = document.createElement('li');
+        item.textContent = `${activity.student} - ${activity.team} - ${activity.type}: ${activity.minutes} minutes (${activity.points} points)`;
+        return item;
+      }));
+    }
+
+    async function loadLeaderboard() {
+      const response = await fetch('/api/leaderboard');
+      if (!response.ok) throw new Error('Unable to load leaderboard.');
+      const { leaderboard } = await response.json();
+      leaderboardList.replaceChildren(...leaderboard.map((entry) => {
+        const item = document.createElement('li');
+        item.textContent = `${entry.team}: ${entry.totalPoints} points`;
+        return item;
+      }));
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      error.textContent = '';
+      const data = new FormData(form);
+      const minutes = data.get('minutes');
+      try {
+        const response = await fetch('/api/activities', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student: data.get('student'),
+            team: data.get('team'),
+            type: data.get('type'),
+            minutes: minutes === '' ? null : Number(minutes),
+          }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        form.reset();
+        await Promise.all([loadActivities(), loadLeaderboard()]);
+      } catch (err) {
+        error.textContent = err.message;
+      }
+    });
+
+    Promise.all([loadActivities(), loadLeaderboard()]).catch((err) => {
+      error.textContent = err.message;
+    });
+  </script>
+</body>
+</html>
