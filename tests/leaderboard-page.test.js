@@ -6,6 +6,7 @@ import { runInNewContext } from 'node:vm';
 
 test('the page loads the leaderboard and refreshes it after an activity', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  assert.match(html, /<th>Activités<\/th>/);
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const elements = {
     '#activity-form': {
