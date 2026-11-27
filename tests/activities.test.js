@@ -83,6 +83,24 @@ test('POST rejects invalid fields with an error message', async () => {
   }
 });
 
+test('POST rejects non-positive minutes without changing activities or leaderboard', async () => {
+  const activities = await request(app).get('/api/activities').expect(200);
+  const leaderboard = await request(app).get('/api/leaderboard').expect(200);
+
+  for (const minutes of [0, -1, -0.5]) {
+    const response = await request(app)
+      .post('/api/activities')
+      .send({ ...validActivity, minutes })
+      .expect(400);
+    assert.equal(response.body.error, 'minutes must be a number between 1 and 300');
+  }
+
+  const activitiesAfter = await request(app).get('/api/activities').expect(200);
+  const leaderboardAfter = await request(app).get('/api/leaderboard').expect(200);
+  assert.deepEqual(activitiesAfter.body, activities.body);
+  assert.deepEqual(leaderboardAfter.body, leaderboard.body);
+});
+
 test('POST rejects malformed JSON with an error message', async () => {
   const response = await request(app)
     .post('/api/activities')
