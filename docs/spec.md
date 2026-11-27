@@ -28,7 +28,7 @@ Seed data at startup: 3 activities across 2 teams, **Octocats** and **Robocats**
 
 | Method and path | Expected behavior |
 | --- | --- |
-| `GET /api/leaderboard` | Returns `{ "leaderboard": [...] }`: one entry per team with `team`, `totalPoints` and a 1-based `rank`, highest points first. |
+| `GET /api/leaderboard` | Returns `{ "leaderboard": [...] }`: one entry per team with `team`, `totalPoints`, `activityCount` and a 1-based `rank`, highest points first. |
 
 ## 4. Web page
 
@@ -36,7 +36,7 @@ Seed data at startup: 3 activities across 2 teams, **Octocats** and **Robocats**
 
 - a form to log an activity (student, team, type, minutes), showing the API error message when the input is invalid;
 - the list of activities, filterable by team or showing all teams; available teams update after an activity is added;
-- (version 2) the team leaderboard, refreshed after each new activity.
+- (version 2) the team leaderboard with rank, points and activity count per team, refreshed after each new activity.
 
 ## 5. Tests
 

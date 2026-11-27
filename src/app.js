@@ -23,11 +23,14 @@ app.get('/api/activities', (req, res) => {
 app.get('/api/leaderboard', (req, res) => {
   const totals = new Map();
   for (const { team, points } of activities) {
-    totals.set(team, (totals.get(team) ?? 0) + points);
+    const totalsForTeam = totals.get(team) ?? { totalPoints: 0, activityCount: 0 };
+    totalsForTeam.totalPoints += points;
+    totalsForTeam.activityCount += 1;
+    totals.set(team, totalsForTeam);
   }
 
   const leaderboard = [...totals]
-    .map(([team, totalPoints]) => ({ team, totalPoints }))
+    .map(([team, totalsForTeam]) => ({ team, ...totalsForTeam }))
     .sort((a, b) => b.totalPoints - a.totalPoints)
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
   res.json({ leaderboard });

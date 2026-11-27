@@ -26,7 +26,12 @@
     </form>
     <p id="error" role="alert"></p>
     <h2>Leaderboard</h2>
-    <ol id="leaderboard"></ol>
+    <table>
+      <thead>
+        <tr><th>Rank</th><th>Team</th><th>Points</th><th>Activities</th></tr>
+      </thead>
+      <tbody id="leaderboard"></tbody>
+    </table>
     <h2>Activities</h2>
     <label>Filter by team
       <select id="team-filter">
@@ -79,8 +84,13 @@
       if (!response.ok) throw new Error('Unable to load leaderboard.');
       const { leaderboard } = await response.json();
       leaderboardList.replaceChildren(...leaderboard.map((entry) => {
-        const item = document.createElement('li');
-        item.textContent = `${entry.team}: ${entry.totalPoints} points`;
+        const item = document.createElement('tr');
+        const cells = [entry.rank, entry.team, entry.totalPoints, entry.activityCount].map((value) => {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          return cell;
+        });
+        item.append(...cells);
         return item;
       }));
     }
